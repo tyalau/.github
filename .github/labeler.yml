@@ -1,0 +1,27 @@
+"dev ops":
+  - changed-files:
+    - any-glob-to-any-file: '.github/**'
+
+changeset:
+  - changed-files:
+    - any-glob-to-any-file: '.changeset/**'
+
+dependencies:
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+
+feature:
+  - head-branch: '^feat/'
+
+refactor:
+  - head-branch: '^refactor/'
+
+bug:
+  - head-branch: '^fix/'
+
+docs:
+  - head-branch: '^docs/'
+  - changed-files:
+    - any-glob-to-any-file: '**/*.md'
