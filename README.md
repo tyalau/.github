@@ -2,16 +2,34 @@
 
 This repository serves as the **Central Command Center** for my GitHub account. It contains global defaults, CI/CD configurations, and community health files used across all my projects.
 
+## 📦 What's Shared
+
+| File | Purpose |
+| --- | --- |
+| [`.github/labeler.yml`](./.github/labeler.yml) | Label rules for Pull Requests |
+| [`.github/workflows/labeler.yml`](./.github/workflows/labeler.yml) | Reusable workflow that applies those labels |
+
 ## 🏷️ Global Labeling Logic
 
-The file [`.github/labeler.yml`](./.github/labeler.yml) defines how Pull Requests are categorized.
+The labeler config defines how Pull Requests are categorized:
+
+| Label | Applied when |
+| --- | --- |
+| `dev ops` | Files under `.github/` change |
+| `changeset` | Files under `.changeset/` change |
+| `dependencies` | `package.json` or `pnpm-lock.yaml` change |
+| `feature` | Branch name starts with `feat/` |
+| `refactor` | Branch name starts with `refactor/` |
+| `bug` | Branch name starts with `fix/` |
+| `docs` | Branch name starts with `docs/`, or any `.md` file changes |
 
 ## 🚀 Use in New Projects
 
-Add a workflow file at `.github/workflows/labeler.yml`:
+Call the reusable workflow from `.github/workflows/labeler.yml` in your project:
 
 ```yaml
-name: 'Pull Request Labeler'
+name: Pull Request Labeler
+
 on:
   pull_request:
     types: [opened, synchronize, reopened]
@@ -21,23 +39,28 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout central config repository
-        uses: actions/checkout@v5
-        with:
-          repository: tyalau/.github
-          path: .central-config
+    uses: tyalau/.github/.github/workflows/labeler.yml@main
+```
 
-      - name: Apply labels
-        uses: actions/labeler@v6
-        with:
-          configuration-path: '.central-config/.github/labeler.yml'
-          sync-labels: true
+The caller must grant `contents: read` and `pull-requests: write`, since a reusable workflow cannot exceed the permissions of its caller.
 
+### Using a project-specific config
+
+By default the shared [`labeler.yml`](./.github/labeler.yml) is used. To use a config from the calling repository instead, pass `configuration-path`:
+
+```yaml
+jobs:
+  labeler:
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: tyalau/.github/.github/workflows/labeler.yml@main
+    with:
+      configuration-path: .github/labeler.yml
 ```
 
 ## 📌 Notes
 
 - Keep this repository as the single source of truth for labels and reusable workflows.
-- When `.github/labeler.yml` gets updated, projects inherit the new label behavior automatically on next PR events.
+- Callers reference `@main`, so updates to the labeler config or workflow apply automatically on the next PR event. Pin to a tag or commit SHA if you need stability.
+- Labels are synced (`sync-labels: true`), so labels that no longer match a rule are removed from the PR.

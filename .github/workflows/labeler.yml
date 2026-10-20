@@ -1,0 +1,34 @@
+name: Pull Request Labeler
+
+on:
+  workflow_call:
+    inputs:
+      configuration-path:
+        description: Labeler config in the calling repo. Defaults to the shared config in tyalau/.github.
+        type: string
+        required: false
+        default: ""
+
+jobs:
+  labeler:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout caller repository
+        if: inputs.configuration-path != ''
+        uses: actions/checkout@v7
+
+      - name: Checkout shared config
+        if: inputs.configuration-path == ''
+        uses: actions/checkout@v7
+        with:
+          repository: tyalau/.github
+          path: .central-config
+
+      - name: Apply labels
+        uses: actions/labeler@v7
+        with:
+          configuration-path: ${{ inputs.configuration-path || '.central-config/.github/labeler.yml' }}
+          sync-labels: true
